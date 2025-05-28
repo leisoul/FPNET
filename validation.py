@@ -2,9 +2,6 @@ import os
 import argparse
 import torch
 import yaml
-import math
-import time
-from pathlib import Path
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from utils.logger import Logger
@@ -15,25 +12,19 @@ class Trainer:
         self.initialize_components()
         
     def setup(self, config_path):
-        """Load configuration and set up basic components"""
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
             
-        # Setup CUDA
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = self.config['gpu_id']
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        # Setup logging
         self.logger = Logger(self.config)
             
     def initialize_components(self):
-        """Initialize model, optimizer, datasets and other components"""
         from models import create_model
         from utils.metrics import create_metrics
         from AIO_dataset import  ValDataset
         
-        # Model
         self.model = create_model(self.config, self.logger).to(self.device)
         self.metrics_cls = create_metrics(self.config)
         self.val_dataset = ValDataset(self.config['datasets'])
@@ -41,15 +32,13 @@ class Trainer:
         self.logger.log_dataset_info(0, len(self.val_dataset))
 
 
-        # weight = r'C:\model\pretrain_model\0122\GOPRO_FPv1_0127\model_latest.pth'
-        # weight = r'C:\model\pretrain_model\0122\GOPRO_FPv1_m11_best_0130\model_best.pth'
         weight = r'C:\model\mymodel\checkpoint\GOPRO_TEST_0201\model_latest.pth'
+
         checkpoint = torch.load(weight, weights_only=True)
-        print("Checkpoint keys:", checkpoint.keys())  # 检查键名
+        print("Checkpoint keys:", checkpoint.keys())  
 
         self.model.load_state_dict(checkpoint['state_dict'])
 
-        print( checkpoint['iter'])
 
 
 

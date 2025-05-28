@@ -1,5 +1,4 @@
 import logging
-import yaml
 import time
 from pathlib import Path
 from torch.utils.tensorboard import SummaryWriter
@@ -23,7 +22,6 @@ class Logger:
         
         
     def _init_logger(self):
-        """Initialize logger"""
         logger = logging.getLogger('train')
         logger.setLevel(logging.INFO)
         
@@ -49,21 +47,6 @@ class Logger:
         """Log info level message"""
         self._logger.info(msg)
         
-    def warning(self, msg):
-        """Log warning level message"""
-        self._logger.warning(msg)
-        
-    def error(self, msg):
-        """Log error level message"""
-        self._logger.error(msg)
-        
-    def debug(self, msg):
-        """Log debug level message"""
-        self._logger.debug(msg)
-
-    def log_config(self):
-        """Log configuration settings"""
-        self.info(f"Configuration:\n{yaml.dump(self.config, default_flow_style=False)}")
         
 
 
@@ -85,8 +68,6 @@ class Logger:
         )
         
     def log_training_status(self, current_iter, start_time, lr, loss):
-        """Log training status"""
-        # 計算預計剩餘時間
         elapsed = time.time() - start_time
         iter_time = elapsed / current_iter
         total_iters = self.config['train']['total_iter']
@@ -96,7 +77,6 @@ class Logger:
         eta = str(timedelta(seconds=eta_seconds)).split('.')[0]
 
 
-        # 格式化輸出
         self.info(
             f"[{self.config['name']}..][iter:{current_iter:,}, "
             f"lr:({lr:.3e}), "
@@ -104,11 +84,6 @@ class Logger:
             f"[eta: {eta}]"
         )
         
-        # Log to tensorboard
-        self.tb_logger.add_scalar('lr', lr, current_iter)
-        self.tb_logger.add_scalars('Loss', {
-            'train': loss/self.config['logger']['print_freq']
-        }, current_iter)
 
     def log_validation_results(self, metrics, current_iter):
         """Log validation metrics"""
@@ -131,9 +106,6 @@ class Logger:
 
             self.info(f"[{self.config['name']}..] best metrics [{dtype}] {best_metrics_str}")
             
-            for k, v in dtype_metrics.items():
-                self.tb_logger.add_scalar(f'metrics/{dtype}/{k}', v, current_iter)
-
         return is_best
     
     def close(self):

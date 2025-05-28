@@ -23,7 +23,6 @@ class Trainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         self.logger = Logger(self.config)
-        self.logger.log_config()
         
         if torch.cuda.is_available():
             self.logger.info(f"Using GPU: {torch.cuda.get_device_name(0)}")
