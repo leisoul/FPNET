@@ -1,0 +1,18 @@
+train:
+  SIDD:
+    gt_path: '/home/leisoul/dataset/denoise/sidd/train/GT'
+    deg_path: '/home/leisoul/dataset/denoise/sidd/train/NOISY'
+    label: 0
+  GOPRO:
+    gt_path: '/home/leisoul/dataset/deblur/GOPRO_Large/train/sharp'
+    deg_path: '/home/leisoul/dataset/deblur/GOPRO_Large/train/blur'
+    label: 1
+val:
+  SIDD:
+    gt_path: '/home/leisoul/dataset/denoise/sidd/val/groundtruth'
+    deg_path: '/home/leisoul/dataset/denoise/sidd/val/input'
+    label: 0
+  GOPRO:
+    gt_path: '/home/leisoul/dataset/deblur/GOPRO_Large/test/sharp'
+    deg_path: '/home/leisoul/dataset/deblur/GOPRO_Large/test/blur'
+    label: 1

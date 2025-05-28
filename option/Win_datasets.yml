@@ -1,0 +1,71 @@
+train:
+  SIDD:
+    gt_path: 'C:\dataset\denoise\sidd\train\GT'
+    deg_path: 'C:\dataset\denoise\sidd\train\NOISY'
+    label: 0
+  GOPRO:
+    gt_path: 'C:\dataset\deblur\GOPRO_Large\train\sharp'
+    deg_path: 'C:\dataset\deblur\GOPRO_Large\train\blur'
+    label: 1
+  Rain100L:
+    gt_path: 'C:\dataset\derain_steak\RainTrainL\norain'
+    deg_path: 'C:\dataset\derain_steak\RainTrainL\rain'
+    label: 2
+  RESIDE:
+    gt_path: 'C:\dataset\dehaze\RESIDE\OTS\clear'
+    deg_path: 'C:\dataset\dehaze\RESIDE\OTS\haze'
+    label: 3
+  # Rain12600:
+  #   gt_path: 'C:\dataset\test\rain12600\train\groundtruth'
+  #   deg_path: 'C:\dataset\test\rain12600\train\groundtruth'
+  #   label: 1
+  # Rain13K:
+  #   gt_path: 'C:\dataset\test\rain12600\train\groundtruth'
+  #   deg_path: 'C:\dataset\test\rain12600\train\groundtruth'
+  #   label: 1
+  BSD500:
+    gt_path: 'C:\dataset\denoise\BSD500\images\train'
+    label: 4
+  BSD500_WED:
+    gt_path: 'C:\dataset\denoise\BSD500_WED'
+    label: 4
+
+val:
+  TEST:
+    gt_path: 'C:\dataset\test\val\GT'
+    deg_path: 'C:\dataset\test\val\degrade'
+    label: 9
+  TEST2:
+    gt_path: 'C:\dataset\test2\val\GT'
+    deg_path: 'C:\dataset\test2\val\degrade'
+    label: 9
+  SIDD:
+    gt_path: 'C:\dataset\denoise\sidd\val\groundtruth'
+    deg_path: 'C:\dataset\denoise\sidd\val\input'
+    label: 0
+  GOPRO:
+    gt_path: 'C:\dataset\deblur\GOPRO_Large\test\sharp'
+    deg_path: 'C:\dataset\deblur\GOPRO_Large\test\blur'
+    label: 1
+  Rain100L:
+    gt_path: 'C:\dataset\derain_steak\Rain100L\Rain100L\norain'
+    deg_path: 'C:\dataset\derain_steak\Rain100L\Rain100L\rainy'
+    label: 2
+  RESIDE:
+    gt_path: 'C:\dataset\dehaze\RESIDE\SOTS\outdoor\gt'
+    deg_path: 'C:\dataset\dehaze\RESIDE\SOTS\outdoor\hazy'
+    label: 3
+  # Rain12600:
+  #   gt_path: 'C:\dataset\test\rain12600\val\groundtruth'
+  #   deg_path: 'C:\dataset\test\rain12600\val\images'
+  #   label: 1
+  # Rain13K:
+  #   gt_path: 'C:\dataset\test\rain12600\val\groundtruth'
+  #   deg_path: 'C:\dataset\test\rain12600\val\images'
+  #   label: 1
+  BSD500:
+    gt_path: 'C:\dataset\denoise\BSD500\images\val'
+    label: 4
+  BSD500_WED:
+    gt_path: 'C:\dataset\denoise\CBSD68'
+    label: 4
