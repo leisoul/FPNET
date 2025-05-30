@@ -1,14 +1,13 @@
-import os
 import argparse
 import torch
 import yaml
-import math
-import time
+import tqdm
 from tqdm import tqdm
 from torch.amp import GradScaler
 from torch.utils.data import DataLoader
-from utils.util import  CheckpointHandler
-from utils.logger import Logger
+from pathlib import Path
+from models.FPNet import FPNet
+from models.losses import L1Loss
 
 class Trainer:
     def __init__(self, config_path):
@@ -19,23 +18,14 @@ class Trainer:
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
             
-        os.environ["CUDA_VISIBLE_DEVICES"] = self.config['gpu_id']
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        self.logger = Logger(self.config)
-        
-        if torch.cuda.is_available():
-            self.logger.info(f"Using GPU: {torch.cuda.get_device_name(0)}")
-        else:
-            self.logger.info("Using CPU")
             
     def initialize_components(self):
         """Initialize model, optimizer, datasets and other components"""
-        from models import create_model, create_loss
         from utils.metrics import create_metrics
         from AIO_dataset import TrainDataset, ValDataset
         
-        self.model = create_model(self.config, self.logger).to(self.device)
+        self.model = FPNet(enc_blk_nums = [2, 2, 4, 8],middle_blk_num = 12,dec_blk_nums = [2, 2, 2, 2],FGM_nums = 1,backbone = 'NAFNet').to('cuda')
         
         self.optimizer = torch.optim.AdamW(
             self.model.parameters(),
@@ -46,7 +36,7 @@ class Trainer:
             **self.config['train']['scheduler']
         )
 
-        self.criterion = create_loss(self.config, self.logger)
+        self.criterion = L1Loss()
         self.metrics_cls = create_metrics(self.config)
         
         self.train_dataset = TrainDataset(self.config['datasets_config'])
@@ -55,31 +45,11 @@ class Trainer:
         self.train_loader = self.create_dataloader(self.train_dataset, shuffle=True)
         self.val_loader = self.create_dataloader(self.val_dataset, shuffle=False)
         
-        self.logger.log_dataset_info(len(self.train_dataset), len(self.val_dataset))
-
-
-        self.current_iter = 0
-        self.epoch = 1
         self.scaler = GradScaler()
         
-        self.num_iter_per_epoch = math.ceil(len(self.train_dataset) / 
-                                          self.config['datasets_config']['batch_size_per_gpu'])
-        self.total_iters = int(self.config['train']['total_iter'])
-        self.total_epochs = math.ceil(self.total_iters / self.num_iter_per_epoch)
-        
+        self.current_iter = 0
 
-        
-        self.checkpoint_handler = CheckpointHandler(
-            model=self.model,
-            optimizer=self.optimizer,
-            scheduler=self.scheduler,
-            device=self.device,
-            save_dir="checkpoint",
-            name=self.logger.result_name, 
-            logger=self.logger
-        )
-        
-        self.logger.log_training_info(self.num_iter_per_epoch, self.total_epochs, self.total_iters)
+        self.total_iters = int(self.config['train']['total_iter'])
             
     def create_dataloader(self, dataset, shuffle):
         """Create dataloader with optimal settings"""
@@ -95,27 +65,18 @@ class Trainer:
     def train_step(self, input_data):
         self.optimizer.zero_grad(set_to_none=True)
         
-        target, input_ = (d.to(self.device, non_blocking=True) for d in input_data[:2])
-        
-        if self.current_iter < self.config['train']['warmup_iter']:
-            for param_group in self.optimizer.param_groups:
-                param_group['lr'] = self.get_warmup_lr()
+        target, input_ = (d.to('cuda', non_blocking=True) for d in input_data[:2])
         
         with torch.amp.autocast('cuda'):
             output = self.model(input_)
             loss = self.criterion(output, target)
             
         self.scaler.scale(loss).backward()
-        
         self.scaler.unscale_(self.optimizer)
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-        
         self.scaler.step(self.optimizer)
         self.scaler.update()
-        
         self.scheduler.step()
         
-        return loss.item()
         
     @torch.no_grad()
     def validate(self):
@@ -123,9 +84,9 @@ class Trainer:
         metrics = {dtype: {met.__class__.__name__: [] for met in self.metrics_cls} 
                   for dtype in self.config['datasets_config']['de_type']}
         
-        for data_val in tqdm(self.val_loader, desc='Validating'):
-            target = data_val[0].to(self.device, non_blocking=True)
-            input_ = data_val[1].to(self.device, non_blocking=True)
+        for data_val in (self.val_loader):
+            target = data_val[0].to('cuda', non_blocking=True)
+            input_ = data_val[1].to('cuda', non_blocking=True)
             data_types = data_val[3]
             
             with torch.amp.autocast('cuda'):
@@ -140,54 +101,38 @@ class Trainer:
                                 met(output[idx], target[idx]).item()
                             )
                             
-        # Average metrics
         return {dtype: {k: sum(v)/len(v) if v else 0 
                       for k, v in dtype_metrics.items()}
                for dtype, dtype_metrics in metrics.items()}
         
     def train(self):
-        self.start_time = time.time()
-        train_loss = 0
-        
-        try:
-            while self.current_iter <= self.total_iters:
-                self.model.train()
-                
-                for batch_idx, train_data in enumerate(self.train_loader):
-                    self.current_iter += 1
-                    if self.current_iter > self.total_iters:
-                        break
-                        
-                    loss = self.train_step(train_data)
-                    train_loss += loss
+        pbar = tqdm(total=self.total_iters, desc='Training')
+        while self.current_iter <= self.total_iters:
+
+            self.model.train()
+            
+            for batch_idx, train_data in enumerate(self.train_loader):
+                self.current_iter += 1
+                pbar.update(1)
+                if self.current_iter > self.total_iters:
+                    break
                     
-                    if self.current_iter % self.config['logger']['print_freq'] == 0:
-                        lr = self.optimizer.param_groups[0]['lr']
-                        self.logger.log_training_status(
-                            self.current_iter,
-                            self.start_time,
-                            lr,
-                            train_loss
-                        )
-                        train_loss = 0
+                self.train_step(train_data)
 
 
-                    if self.current_iter % self.config['val']['val_freq'] == 0 or self.current_iter == 1000:
-                        metrics = self.validate()
-                        is_best = self.logger.log_validation_results(metrics, self.current_iter)
+                if self.current_iter % self.config['val']['val_freq'] == 0 or self.current_iter == 1000:
+                    metrics = self.validate()
+                    for dtype, dtype_metrics in metrics.items():
 
-                        self.checkpoint_handler.save(
-                            model=self.model,
-                            optimizer=self.optimizer,
-                            scheduler=self.scheduler,
-                            current_iter=self.current_iter,
-                            epoch=self.epoch,
-                            is_best=is_best
-                        )
+                        metrics_str = ', '.join([
+                            f"{k}: {v:.4f}" for k, v in dtype_metrics.items()
+                        ])
+                        print(f"\n metrics [{dtype}] {metrics_str}")
 
-                self.epoch += 1
-        finally:
-            self.logger.close()
+        pbar.close() 
+        Path("checkpoint").mkdir(parents=True, exist_ok=True)
+        torch.save({'state_dict': self.model.state_dict()}, "checkpoint/model_latest.pth")
+        
 
 def main():
     parser = argparse.ArgumentParser()

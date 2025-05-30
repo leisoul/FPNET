@@ -1,13 +1,10 @@
 import os
 import random
-import copy
 import numpy as np
 import cv2
-import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
-from utils.dataset_utils import Degradation, add_gaussian_noise
-from utils import  data_augmentation
+import yaml
 
 class TrainDataset(Dataset):
     def __init__(self, config):
@@ -21,11 +18,6 @@ class TrainDataset(Dataset):
 
         self._load_datasets(self.de_type)
 
-        # self.data.update({
-        #     'datasets': self.de_type,
-        #     'num_datasets': len(self.de_type),
-        #     'count': -1
-        # })
 
     def _load_datasets(self, de_type):
         for dataset_name in de_type:
@@ -35,25 +27,14 @@ class TrainDataset(Dataset):
 
             dataset = self.root.get(dataset_name)
 
-            # if dataset_name in {'BSD500', 'BSD500_WED'}:
-            #     image_pairs = self._get_image_pairs(
-            #        dataset['gt_path'], 
-            #         dataset['gt_path']
-            #     )
-
-            # else:
             image_pairs = self._get_image_pairs(
                 dataset['gt_path'], 
                 dataset['deg_path']
             )
             
-            # self.data[dataset_name] = {
             self.data= {
                 'ground_truth': image_pairs[0],
                 'degradation': image_pairs[1],
-                # 'label': dataset['label'],
-                # 'num_images': len(image_pairs[0]),
-                # 'count': -1
             }
 
     def _get_image_pairs(self, gt_path, deg_path):
@@ -86,23 +67,7 @@ class TrainDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        # self.data['count'] = (self.data['count'] + 1) % self.data['num_datasets']
-        # if self.data['count'] == 0:
-        #     random.shuffle(self.data['datasets'])
-        
-        # dataset_name = self.data['datasets'][self.data['count']]
-        # dataset_info = self.data[dataset_name]
-
-        # dataset_info['count'] = (dataset_info['count'] + 1) % dataset_info['num_images']
-        # if dataset_info['count'] == dataset_info['num_images']:
-        #     shuffled = list(zip(dataset_info['ground_truth'], dataset_info['degradation']))
-        #     random.shuffle(shuffled)
-        #     dataset_info['ground_truth'], dataset_info['degradation'] = zip(*shuffled)
-         
-            
-
-        # clean_root = dataset_info['ground_truth'][dataset_info['count']]
-        # degrade_root = dataset_info['degradation'][dataset_info['count']]
+   
         clean_root = self.data['ground_truth'][idx]
         degrade_root = self.data['degradation'][idx]
 
@@ -115,7 +80,6 @@ class TrainDataset(Dataset):
         clean_patch = data_augmentation(clean_patch, mode).copy()
         degrade_patch = data_augmentation(degrade_patch, mode).copy()
 
-        # degrade_patch = add_gaussian_noise(degrade_patch, random.choice([15, 25, 50]))
 
 
         
@@ -124,11 +88,7 @@ class TrainDataset(Dataset):
                 )
 
     def __len__(self):
-        # counter = 0
-        # for k, v in self.data.items():
-        #     if isinstance(v, dict) and 'num_images' in v:
-        #         counter += self.data[k]['num_images']
-        # return counter
+      
         return len(self.data['ground_truth'])
 
 class ValDataset(Dataset):
@@ -154,13 +114,6 @@ class ValDataset(Dataset):
 
             dataset = self.root.get(dataset_name)
 
-            # if dataset_name in {'BSD500', 'BSD500_WED'}:
-            #     image_pairs = self._get_image_pairs(
-            #        dataset['gt_path'], 
-            #         dataset['gt_path']
-            #     )
-
-            # else:
             image_pairs = self._get_image_pairs(
                 dataset['gt_path'], 
                 dataset['deg_path']
@@ -212,10 +165,6 @@ class ValDataset(Dataset):
         
         clean_patch, degrade_patch = self._extract_patch(clean_img, degrade_img)
 
-        # if self.labels[idx] == 4:
-        #     degrade_patch = add_gaussian_noise(degrade_patch, random.choice([15, 25, 50]))
-  
-        
         return (transforms.ToTensor()(clean_patch),
                 transforms.ToTensor()(degrade_patch),
                 self.labels[idx],
@@ -225,22 +174,16 @@ class ValDataset(Dataset):
     def __len__(self):
         return len(self.ground_truth)
 
+def data_augmentation(image, mode):
+    augmentations = {
+        0: lambda img: img,                                 # original
+        1: lambda img: np.flipud(img),                      # flip up and down
+        2: lambda img: np.rot90(img),                       # rotate counterclockwise 90 degrees
+        3: lambda img: np.flipud(np.rot90(img)),            # rotate 90 degrees and flip up and down
+        4: lambda img: np.rot90(img, k=2),                  # rotate 180 degrees
+        5: lambda img: np.flipud(np.rot90(img, k=2)),       # rotate 180 degrees and flip
+        6: lambda img: np.rot90(img, k=3),                  # rotate 270 degrees
+        7: lambda img: np.flipud(np.rot90(img, k=3)),      # rotate 270 degrees and flip
+    }
+    return augmentations[mode](image)
 
-
-import yaml
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from utils.logger import Logger
-
-if __name__ == '__main__':
-    config = yaml.safe_load(open('./option/test.yml', 'r', encoding='utf-8'))
-    train_loader = DataLoader(TrainDataset(config['datasets_config']),batch_size = 8, num_workers=12)
-    val_loader = DataLoader(ValDataset(config['datasets_config']),batch_size = 8)
-    Logger(config).log_dataset_info(len(train_loader.dataset), len(val_loader.dataset))
-    current_iter = 0
-    total_iter = 170438
-    while current_iter <= total_iter:
-        for _ in tqdm(train_loader):
-            current_iter += 1
-            if current_iter > total_iter:break 
-    for _ in tqdm(val_loader, desc='Validating'):pass

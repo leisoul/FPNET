@@ -1,67 +1,12 @@
-name: 'TEST'
-gpu_id: '0'
-
 datasets_config:
   de_type:
     - SIDD
     # - GOPRO
-    # - RESIDE
-    # - TEST
-    # - TEST2
-    # - Rain100L
-    # - RESIDE
-    # - Rain12600
-    # - Rain13K
-    # - BSD500
-    # - BSD500_WED
 
   patch_size: 256
   num_worker_per_gpu: 2
   batch_size_per_gpu: 2
   datasets_root: .\option\win_datasets.yml
-
-network_g:
-
-  type: FPNAFNet
-  width: 16
-
-  enc_blk_nums: [2, 2, 4, 8]
-  middle_blk_num: 12
-  dec_blk_nums: [2, 2, 2, 2]
-  FGM_nums: 1
-  backbone: NAFNet
-
-
-  # num_refinement_blocks: 4
-  # heads: [1,2,4,8]
-  # ffn_expansion_factor: 2.66
-  # bias: False
-  # LayerNorm_type: BiasFree
-  # dual_pixel_task: False
-
-  # enc_blk_nums: [1, 1, 1, 27]
-  # middle_blk_num: 1
-  # dec_blk_nums: [1, 1, 1, 1]
-
-
-  # type: NAFNet
-  # width: 32
-  # enc_blk_nums: [2, 2, 4, 8]
-  # middle_blk_num: 12
-  # dec_blk_nums: [2, 2, 2, 2]
-
-
-  # type: Restormer
-  # inp_channels: 3
-  # out_channels: 3
-  # dim: 48
-  # num_blocks: [4,6,6,8]
-  # num_refinement_blocks: 4
-  # heads: [1,2,4,8]
-  # ffn_expansion_factor: 2.66
-  # bias: False
-  # LayerNorm_type: BiasFree
-  # dual_pixel_task: False
 
 
 train:
@@ -74,26 +19,10 @@ train:
   scheduler:
     T_max: 1000
     eta_min: !!float 1e-7
-  total_iter: 500
-  warmup_iter: -1
-
-  # scheduler:
-  #   # type: TrueCosineAnnealingLR
-  #   T_max: 200000
-  #   eta_min: !!float 1e-7
-  
-  # total_iter: !!float 2e5
-  # warmup_iter: -1 
-
-  
-  pixel_opt:
-    type: L1Loss
-
+  total_iter: 49
 val:
-  val_freq: !!float 3e1
+  val_freq: !!float 2.5e1
   metrics:
     PSNR: null
     SSIM: null
 
-logger:
-  print_freq: 10

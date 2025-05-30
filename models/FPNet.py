@@ -144,7 +144,7 @@ class FGM(nn.Module):
         
         return x
 
-class FPNAFNet(nn.Module):
+class FPNet(nn.Module):
 
     def __init__(self,inp_size=256, img_channel=3, width=16, middle_blk_num=1, enc_blk_nums=[], dec_blk_nums=[], hidden=4, FGM_nums=4, backbone=None):
         super().__init__()
@@ -178,52 +178,4 @@ class FPNAFNet(nn.Module):
         x = x + inp
 
         return x[:, :, :H, :W]
-
-
-if __name__ == '__main__':
-    img_channel = 3
-    width = 32
-
-    enc_blk_nums = [2, 2, 4, 8]
-    middle_blk_num = 12
-    dec_blks = [2, 2, 2, 2]  
-    FGM_nums = 1
-    backbone = 'NAFNet'
-
-    # enc_blk_nums= [4, 6, 6, 8]
-    # FGM_nums = 1
-    # middle_blk_num = 12
-    # dec_blks = [2, 2, 2, 2]  
-    # backbone = 'Restormer'
-
-    # enc_blks = [1, 1, 1, 27]
-    # middle_blk_num = 1
-    # dec_blks = [1, 1, 1, 1]
-    
-    net = FPNAFNet(img_channel=img_channel, width=width, middle_blk_num=middle_blk_num,
-                      enc_blk_nums=enc_blk_nums, dec_blk_nums=dec_blks, FGM_nums=FGM_nums, backbone=backbone)
-
-
-    inp_shape = (2, 3, 256, 256)
-    random_image = torch.rand(inp_shape, dtype=torch.float32)
-    output = net(random_image)
-    if torch.isnan(output).any():
-        print("Output contains NaN values")
-    else:
-        print("Output does not contain NaN values")
-
-
-    from ptflops import get_model_complexity_info
-    flops, params = get_model_complexity_info(net, (3, 256, 256), as_strings=True, print_per_layer_stat=False)
-    print('FLOPs:', flops)
-    print('Parameters:', params)
-
-
-
-
-
-
-
-
-
 
