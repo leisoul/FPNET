@@ -1,4 +1,3 @@
-好的，我幫你依照這個專案目錄結構撰寫一份 **README.md** 範例，你可以再依實際研究內容修改。以下是英文版本的 README：
 
 ```markdown
 # Image Restoration Framework
@@ -110,3 +109,4 @@ This repository builds upon various open-source implementations of CNN and Trans
 
 要不要我幫你再生一份 **中文版 README**，比較方便你交給團隊內部使用？
 ```
+
