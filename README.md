@@ -1,20 +1,18 @@
 
-```markdown
 # Image Restoration Framework
 
-This repository contains the implementation of an image restoration framework that supports multiple tasks, including denoising, deblurring, low-light enhancement, and raindrop removal.  
+This repository contains the implementation of an image restoration framework that supports multiple tasks, including denoising and deblurring.
 The framework is based on a U-shaped encoder-decoder architecture with novel attention modules to balance efficiency and performance.
 
----
 
 ## 📂 Project Structure
 ```
 
-project\_root/
+project_root/
 │── models/              # Network architecture definitions
 │── option/              # Configuration files and hyperparameters
 │── utils/               # Utility functions
-│── AIO\_dataset.py       # Dataset loader and preprocessing
+│── AIO_dataset.py       # Dataset loader and preprocessing
 │── train.py             # Training entry point
 │── validation.py        # Validation and evaluation scripts
 │── README.md            # Project description and usage
@@ -51,7 +49,7 @@ pip install -r requirements.txt
 To start training, run:
 
 ```bash
-python train.py --config option/train_config.yaml
+python train.py 
 ```
 
 ---
@@ -61,7 +59,7 @@ python train.py --config option/train_config.yaml
 To evaluate the model:
 
 ```bash
-python validation.py --config option/val_config.yaml --weights path/to/checkpoint.pth
+python validation.py 
 ```
 
 ---
@@ -77,10 +75,8 @@ Modify `AIO_dataset.py` to set the dataset paths.
 
 The proposed method achieves state-of-the-art performance on multiple benchmarks:
 
-* **Denoising:** SIDD, DND
+* **Denoising:** SIDD
 * **Deblurring:** GoPro
-* **Low-light enhancement:** LOL dataset
-* **Raindrop removal:** RainDrop dataset
 
 ---
 
@@ -89,24 +85,12 @@ The proposed method achieves state-of-the-art performance on multiple benchmarks
 If you find this work useful, please cite:
 
 ```
-@article{your_paper,
+@inproceedings{wang2025efficient,
   title={Efficient Feature-Guided Approach for Image Restoration},
-  author={Your Name},
-  journal={To appear in ...},
-  year={2025}
+  author={Wang, Chan-Yu and Liu, Tsung-Jung and Liu, Kuan-Hsien},
+  booktitle={2025 IEEE International Conference on Image Processing (ICIP)},
+  pages={2886--2891},
+  year={2025},
+  organization={IEEE}
 }
 ```
-
----
-
-## 🙌 Acknowledgments
-
-This repository builds upon various open-source implementations of CNN and Transformer-based image restoration models.
-
-```
-
----
-
-要不要我幫你再生一份 **中文版 README**，比較方便你交給團隊內部使用？
-```
-
