@@ -22,11 +22,11 @@ project_root/
 ---
 
 ## 🚀 Features
-- **Enhanced U-shaped architecture** with improved head and tail design.
-- **Multi-Branch Directional Convolution Mechanism (MBDM)** for structure recovery.
-- **Shallow Feature Channel Attention Module (SF-CAM)** for detail refinement.
-- **Lightweight attention mechanism** that captures both global and local features.
-- Supports **multiple restoration tasks** with competitive efficiency.
+- **Feature Pick (FP) Module**: Adaptively selects task-relevant features while discarding redundancy, reducing unnecessary computations and improving efficiency.
+- **Detail Auxiliary Block (DAB)**: Enhances fine-grained details by dynamically adjusting weights, allowing critical structures to bypass the main restoration network.
+- **Plug-and-Play Framework**: FP and DAB can be seamlessly integrated into various image restoration models with minimal computational overhead.
+- **Computational Lightweighting**: Achieves up to **88% reduction in FLOPs** compared to Restormer while delivering superior restoration quality.
+- **Versatile Restoration Capability**: Demonstrates state-of-the-art performance on multiple tasks, including **denoising** and **deblurring**.
 
 ---
 
@@ -94,3 +94,4 @@ If you find this work useful, please cite:
   organization={IEEE}
 }
 ```
+
